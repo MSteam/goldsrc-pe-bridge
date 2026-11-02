@@ -1,8 +1,9 @@
 # Building
 
 The Linux libraries are built in the Steam Runtime "scout" SDK (32-bit, the
-runtime Steam runs Half-Life in). The small Windows helper `vgui_host.dll` is
-built on the host with LLVM (`clang-cl`, `lld-link`, `llvm-dlltool`).
+runtime Steam runs Half-Life in). Generated headers and the small Windows helper
+`vgui_host.dll` are made on the host: `python3` and LLVM (`clang-cl`, `lld-link`,
+`llvm-dlltool`).
 No game or mod files are needed.
 
 ```bash
@@ -14,8 +15,9 @@ git clone https://github.com/taviso/loadlibrary.git client_bridge/refs/loadlibra
 git -C client_bridge/refs/loadlibrary checkout c40033b12fd82514f8ee4e42a25906b773b91b5c
 git -C client_bridge/refs/loadlibrary apply "$PWD/pe_runtime/tools/loadlibrary.patch"
 
-# Windows helper (host)
-make -C client_bridge build/vgui_host.dll
+# Host: generated headers (Python 3.6+) and the Windows helper
+make -C server_bridge build/engine_thunks.inc build/export_slots.S
+make -C client_bridge build/engine_thunks.inc build/vgui_host.dll
 
 # Linux libraries (scout SDK)
 podman run --rm --userns=keep-id -v "$PWD:$PWD" -w "$PWD" \
