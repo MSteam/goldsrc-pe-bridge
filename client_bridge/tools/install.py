@@ -10,6 +10,7 @@ ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--mod',type=Path,required=True,help='mod directory to install into, e.g. Half-Life/reprocessing')
 parser.add_argument('--build-root',type=Path,help='mod_src directory containing separately built client/server/runtime artifacts')
+parser.add_argument('--vgui-dll',type=Path,help='Windows vgui.dll to copy into cl_dlls (if the mod has none)')
 parser.add_argument('--client-only',action='store_true',help='Only replace cl_dlls/client.so')
 args=parser.parse_args()
 MOD=args.mod.resolve()
@@ -20,10 +21,13 @@ BACKUP.mkdir(parents=True,exist_ok=True)
 items=[(SOURCE/'pe_runtime/build/libgoldsrc_pe.so',MOD/'dlls/libgoldsrc_pe.so'),
        (SOURCE/'client_bridge/build/client.so',MOD/'cl_dlls/client.so'),
        (SOURCE/'client_bridge/build/vgui_host.dll',MOD/'cl_dlls/vgui_host.dll'),
-       (SOURCE/'client_bridge/refs/vgui.dll',MOD/'cl_dlls/vgui.dll'),
-       (SOURCE/'gunman_bridge/build/bridge.so',MOD/'dlls/bridge.so')]
+       (SOURCE/'server_bridge/build/bridge.so',MOD/'dlls/bridge.so')]
+# The client runs the Windows VGUI1 library from the mod's cl_dlls.
+if args.vgui_dll:items.append((args.vgui_dll.resolve(),MOD/'cl_dlls/vgui.dll'))
+elif not args.client_only and not (MOD/'cl_dlls/vgui.dll').exists():
+    parser.error(f'{MOD}/cl_dlls has no vgui.dll; pass --vgui-dll <Windows Half-Life vgui.dll>')
 # gunman.so is the historical name of bridge.so; refresh it only where installed.
-if (MOD/'dlls/gunman.so').exists():items.append((SOURCE/'gunman_bridge/build/gunman.so',MOD/'dlls/gunman.so'))
+if (MOD/'dlls/gunman.so').exists():items.append((SOURCE/'server_bridge/build/bridge.so',MOD/'dlls/gunman.so'))
 if args.client_only:items=[item for item in items if item[1]==MOD/'cl_dlls/client.so']
 report={'mod':str(MOD),'backup':str(BACKUP),'build_root':str(SOURCE),'scope':'client-only' if args.client_only else 'all','files':{}}
 provenance=SOURCE/'build_environment.json'
@@ -34,11 +38,6 @@ for source,dest in items:
         target=BACKUP/dest.relative_to(MOD);target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(dest,target)
     temporary=dest.with_name(dest.name+'.installing');shutil.copy2(source,temporary);temporary.replace(dest)
     report['files'][str(dest)]={'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)}
-retired=MOD/'dlls/librewolf_pe.so'
-if not args.client_only and retired.exists():
-    target=BACKUP/retired.relative_to(MOD);target.parent.mkdir(parents=True,exist_ok=True)
-    shutil.copy2(retired,target)
-    retired.unlink()
-    report['retired_files']=[str(retired)]
+(ROOT/'logs').mkdir(exist_ok=True)
 (ROOT/'logs'/f'install_manifest_{MOD.name}.json').write_text(json.dumps(report,indent=2)+'\n')
 print('Installed bridge files; previous files:',BACKUP)

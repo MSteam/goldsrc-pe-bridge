@@ -186,13 +186,6 @@ EXPORT int GetNewDLLFunctions(NEW_DLL_FUNCTIONS *table,int *version) {
 }
 EXPORT const char *HLBridge_GetDLLPath() {return pe_loaded?selected_dll:nullptr;}
 EXPORT size_t HLBridge_GetExportCount() {return published_exports;}
-/* Read-only diagnostic access for the separate native integration host. */
-EXPORT const enginefuncs_t *GunmanBridge_GetNativeEngineFunctions() {
-    return initialized?&engine_original:nullptr;
-}
-EXPORT const enginefuncs_t *GunmanBridge_GetPEEngineFunctions() {
-    return initialized?&engine_pe:nullptr;
-}
 __attribute__((destructor)) static void detach() {
     if(pe_loaded) {
         std::fprintf(stderr,"[bridge] server counters: init=%u factories=%u spawn=%u keyvalue=%u activate=%u think=%u frame=%u movement=%u\n",

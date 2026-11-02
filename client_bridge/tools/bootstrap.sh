@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+# Fetch taviso/loadlibrary at the pinned revision and apply the bridge patch.
 set -euo pipefail
 bridge_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 loader_dir="$bridge_dir/refs/loadlibrary"
 revision=c40033b12fd82514f8ee4e42a25906b773b91b5c
 patch="$bridge_dir/../pe_runtime/tools/loadlibrary.patch"
-mkdir -p "$bridge_dir"/{build,logs,refs,run} "$bridge_dir/../pe_runtime/build" "$bridge_dir/../gunman_bridge/build"
+mkdir -p "$bridge_dir/refs"
 if [[ ! -d "$loader_dir/.git" ]]; then
     git clone --no-checkout https://github.com/taviso/loadlibrary.git "$loader_dir"
     git -C "$loader_dir" checkout --detach "$revision"
@@ -19,10 +20,4 @@ elif git -C "$loader_dir" diff --quiet && git -C "$loader_dir" apply --check "$p
 else
     echo 'Unexpected loader changes; preserve them and inspect the patch.' >&2;exit 1
 fi
-# --fetch-only: loader checkout and patch for scout/tools/build.sh, no host build.
-[[ "${1:-}" == --fetch-only ]] && exit 0
-if [[ ! -f "$bridge_dir/refs/vgui.dll" ]]; then
-    echo 'Place the Windows vgui.dll (e.g. Gunman cl_dlls/vgui.dll) in refs/vgui.dll.' >&2;exit 1
-fi
-make -C "$bridge_dir" -j"${CB_BUILD_JOBS:-2}" all
-make -C "$bridge_dir/../gunman_bridge" -j"${CB_BUILD_JOBS:-2}" all
+echo "loadlibrary $revision with the bridge patch: $loader_dir"

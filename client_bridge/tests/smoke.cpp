@@ -162,8 +162,8 @@ static const char *local_info(const char*) {return "";}
 static int player_unique_id(int player,char id[16]) {memset(id,0,16);id[0]=static_cast<char>(player);return 1;}
 static int server_command(char *text) {printf("[server command] %s\n",text);return 1;}
 static int app_id() {return 70;}
-// A PE client can register an interface only under its name string; clients
-// built before the HL25 SDK (Decay) have a CreateInterface without this one.
+// A PE client can export or register a name only if the string is in the DLL;
+// older clients lack HUD_GetStudioModelInterface or GameClientExports001.
 static bool pe_names_interface(const char *name) {
     std::ifstream file(asset_root+"/cl_dlls/client.dll",std::ios::binary);
     std::string data((std::istreambuf_iterator<char>(file)),std::istreambuf_iterator<char>());
@@ -255,10 +255,12 @@ int main(int argc,char **argv) {
         r_studio_interface_t *studio_interface=nullptr;
         auto get=reinterpret_cast<int(*)(int,r_studio_interface_t**,engine_studio_api_t*)>(symbol("HUD_GetStudioModelInterface"));
         int result=get(STUDIO_INTERFACE_VERSION,&studio_interface,&studio);
-        if(result!=1||!studio_interface||studio_interface->version!=STUDIO_INTERFACE_VERSION||!studio_interface->StudioDrawModel) {
+        if(!result&&!pe_names_interface("HUD_GetStudioModelInterface")) {
+            // Older clients (Gunman) leave model drawing to the engine's renderer.
+            printf("[smoke] SKIP HUD_GetStudioModelInterface: the PE client does not export it\n");
+        } else if(result!=1||!studio_interface||studio_interface->version!=STUDIO_INTERFACE_VERSION||!studio_interface->StudioDrawModel) {
             fprintf(stderr,"[smoke] FAIL stage=HUD_GetStudioModelInterface: result=%d interface=%p\n",result,(void*)studio_interface);return 7;
-        }
-        printf("[smoke] PASS HUD_GetStudioModelInterface: PE studio renderer v%d\n",studio_interface->version);
+        } else printf("[smoke] PASS HUD_GetStudioModelInterface: PE studio renderer v%d\n",studio_interface->version);
     }
     if(!strcmp(until,"vid")) {
         // Native GameUI's view of the PE client: mute state must round-trip.

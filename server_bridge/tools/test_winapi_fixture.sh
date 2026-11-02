@@ -12,4 +12,4 @@ printf 'game "WinAPI fixture"\ngamedll "dlls\\winapi_fixture.dll"\ngamedll_linux
 # Any stock MP3 serves for the virtual fmod.dll; SDL's dummy driver mixes in real time without a sound card.
 song="${CB_GAME_DIR:-/nonexistent}/valve/media/Half-Life01.mp3"
 [[ -f "$song" ]] && export CB_TEST_MP3="$song" SDL_AUDIODRIVER=dummy
-env -u HLBRIDGE_DLL -u GUNMAN_BRIDGE_DLL ./build/winapi_probe "$PWD/$fixture/dlls/winapi_bridge.so" "$PWD/$fixture/liblist.gam" "$PWD/$fixture/dlls"
+env -u HLBRIDGE_DLL ./build/winapi_probe "$PWD/$fixture/dlls/winapi_bridge.so" "$PWD/$fixture/liblist.gam" "$PWD/$fixture/dlls"

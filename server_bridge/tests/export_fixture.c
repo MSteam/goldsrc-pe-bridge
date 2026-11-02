@@ -1,4 +1,4 @@
-/* PE32 fixture deliberately unrelated to Gunman; no CRT or external imports. */
+/* PE32 fixture of a renamed mod DLL; no CRT or external imports. */
 int FixtureData=9182;
 int __stdcall DllMain(void *module,unsigned reason,void *reserved) {
     (void)module;(void)reason;(void)reserved;return 1;

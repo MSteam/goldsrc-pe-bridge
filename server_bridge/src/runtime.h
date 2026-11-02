@@ -1,5 +1,5 @@
-#ifndef GUNMAN_BRIDGE_RUNTIME_H
-#define GUNMAN_BRIDGE_RUNTIME_H
+#ifndef GOLDSRC_PE_RUNTIME_H
+#define GOLDSRC_PE_RUNTIME_H
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {

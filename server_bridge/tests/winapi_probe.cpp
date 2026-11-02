@@ -73,7 +73,7 @@ int main(int argc,char **argv) {
         auto seek=reinterpret_cast<int(*)(int)>(dlsym(module,"FixtureMusicSeek"));
         auto stop=reinterpret_cast<int(*)()>(dlsym(module,"FixtureMusicStop"));
         CHECK(start&&now&&pause&&seek&&stop,"music exports not published");
-        int channel=start("reprocessing\\fmod.dll",windows(song).c_str());
+        int channel=start("fmod.dll",windows(song).c_str());
         CHECK(channel==0,"FMOD start step %d",channel);
         auto wait=[](int ms){timespec t{ms/1000,(ms%1000)*1000000L};nanosleep(&t,nullptr);};
         wait(600);int played=now();

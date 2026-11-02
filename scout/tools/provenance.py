@@ -12,14 +12,8 @@ report={'runtime':'scout','sdk_image_id':image['Id'],'sdk_digest':image['Digest'
  'loader_patch_sha256':hashlib.sha256((BRIDGE/'pe_runtime/tools/loadlibrary.patch').read_bytes()).hexdigest(),
  'settings':(BRIDGE/'build_settings.mk').read_text(),
  'windows_helper':'PE32 built with host clang-cl/lld-link; no ELF dependencies',
- 'tests':['server API/stack alignment/save-restore/relocation/mixed-case factories',
-          'runtime ELF publication; renamed bridge; different PE DLL from liblist; legacy and new API; unload/reload; missing config/DLL',
-          'client/server both load orders; HUD/VGUI fonts',
-          'legacy PE mouse input: one-count motion, fractional diagonals, FPS, accumulation, window origins and GUI coordinates',
-          'relative mouse capture: GUI/console/focus transitions, recenter event preservation, ownership and fallback',
-          'ELF32/dependencies/symbol versions/library paths; SysV hash and generic reserve'],
  'artifacts':artifacts}
 text=json.dumps(report,indent=2)+'\n'
 (ROOT/'logs/build_environment.json').write_text(text)
-(ROOT/'work/Half-Life/Rewolf/mod_src/build_environment.json').write_text(text)
+(ROOT/'work/src/build_environment.json').write_text(text)
 print('Recorded Scout SDK and artifact provenance.')

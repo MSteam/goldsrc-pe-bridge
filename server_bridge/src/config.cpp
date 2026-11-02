@@ -55,7 +55,6 @@ public:
 
 std::string bridge_dll_path(void *module_anchor) {
     const char *override_path=std::getenv("HLBRIDGE_DLL");
-    if(!override_path||!*override_path)override_path=std::getenv("GUNMAN_BRIDGE_DLL");
     if(override_path&&*override_path)return canonical(override_path);
     Dl_info info{};
     if(!dladdr(module_anchor,&info)||!info.dli_fname)
