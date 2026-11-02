@@ -1,0 +1,9 @@
+LIBRARY fixture_variant
+EXPORTS
+    GiveFnptrsToDll=_GiveFnptrsToDll@8
+    GetEntityAPI
+    GetNewDLLFunctions
+    CompletelyNewEntityWithMixedCASE
+    AnotherUnlistedEntity
+    "fixture.entity-with-dash"=FixtureAlias
+    FixtureData DATA

@@ -1,0 +1,125 @@
+diff --git a/peloader/pe_linker.c b/peloader/pe_linker.c
+index cbdad73..a49f4ff 100644
+--- a/peloader/pe_linker.c
++++ b/peloader/pe_linker.c
+@@ -50,6 +50,7 @@ struct pe_exports {
+ static struct pe_exports *pe_exports;
+ static int num_pe_exports;
+ PKUSER_SHARED_DATA SharedUserData;
++static unsigned int nt_threadinfo_entry = (unsigned int)-1;
+ 
+ #define DRIVER_NAME "pelinker"
+ #define RVA2VA(image, rva, type) (type)(ULONG_PTR)((void *)image + rva)
+@@ -321,8 +322,10 @@ static int read_exports(struct pe_image *pe)
+         ordinal_table = (uint16_t *)(pe->image +
+                                       export_dir_table->AddressOfNameOrdinals);
+ 
+-        pe_exports = calloc(export_dir_table->NumberOfNames, sizeof(struct pe_exports));
+-        num_pe_exports = 0;
++        pe_exports = realloc(pe_exports,
++                             (num_pe_exports + export_dir_table->NumberOfNames) * sizeof(struct pe_exports));
++        if (!pe_exports)
++                return -ENOMEM;
+ 
+         for (i = 0; i < export_dir_table->NumberOfNames; i++) {
+                 uint32_t address = ((uint32_t *) (pe->image + export_dir_table->AddressOfFunctions))[*ordinal_table];
+@@ -483,14 +486,23 @@ static int fix_pe_image(struct pe_image *pe)
+ 
+         memset(image, 0, image_size);
+ 
+-        /* Copy all the headers, ie everything before the first section. */
++        /* Copy the headers. SizeOfHeaders, not the first section's file
++         * offset: an incrementally linked image starts with .textbss, a
++         * section without file data (PointerToRawData 0). */
+ 
+         sections = pe->nt_hdr->FileHeader.NumberOfSections;
+         sect_hdr = IMAGE_FIRST_SECTION(pe->nt_hdr);
+ 
+-        DBGLINKER("copying headers: %u bytes", sect_hdr->PointerToRawData);
++        if (pe->opt_hdr->SizeOfHeaders > pe->size ||
++            pe->opt_hdr->SizeOfHeaders > image_size) {
++                ERROR("Invalid header size %u", pe->opt_hdr->SizeOfHeaders);
++                munmap(image, image_size + getpagesize());
++                return -EINVAL;
++        }
++
++        DBGLINKER("copying headers: %u bytes", pe->opt_hdr->SizeOfHeaders);
+ 
+-        memcpy(image, pe->image, sect_hdr->PointerToRawData);
++        memcpy(image, pe->image, pe->opt_hdr->SizeOfHeaders);
+ 
+         /* Copy all the sections */
+         for (i = 0; i < sections; i++) {
+@@ -581,7 +593,9 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
+                 //       pe->opt_hdr->AddressOfEntryPoint);
+ 
+                 // Check if there were enough data directories for a TLS section.
+-                if (pe->opt_hdr->NumberOfRvaAndSizes >= IMAGE_DIRECTORY_ENTRY_TLS) {
++                if (pe->opt_hdr->NumberOfRvaAndSizes > IMAGE_DIRECTORY_ENTRY_TLS &&
++                    pe->opt_hdr->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress &&
++                    pe->opt_hdr->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].Size >= sizeof(IMAGE_TLS_DIRECTORY)) {
+                     // Normally, we would be expected to allocate a TLS slot,
+                     // place the number into *TlsData->AddressOfIndex, and make
+                     // it a pointer to RawData, and then process the callbacks.
+@@ -648,10 +662,12 @@ bool pe_load_library(const char *filename, void **image, size_t *size)
+ 
+     // Install a minimal thread information block (TIB), this is required for
+     // code that uses SEH as it accesses it via fs selector.
+-    setup_nt_threadinfo(NULL);
++    if (!setup_nt_threadinfo(NULL))
++        goto error;
+ 
+     // Install a minimal KUSER_SHARED_DATA structure.
+-    setup_kuser_shared_data();
++    if (!setup_kuser_shared_data())
++        goto error;
+ 
+     return true;
+ 
+@@ -659,8 +675,8 @@ error:
+     if (fd >= 0)
+         close(fd);
+ 
+-    if (image != MAP_FAILED)
+-        munmap(image, buf.st_size);
++    if (*image != MAP_FAILED)
++        munmap(*image, buf.st_size);
+ 
+     return false;
+ }
+@@ -700,6 +716,7 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
+     if (syscall(__NR_set_thread_area, &pebdescriptor) != 0) {
+         return false;
+     }
++    nt_threadinfo_entry = pebdescriptor.entry_number;
+ 
+     // Install descriptor
+     asm("mov %[segment], %%fs" :: [segment] "r"(pebdescriptor.entry_number*8+3));
+@@ -707,13 +724,26 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
+     return true;
+ }
+ 
++void release_nt_threadinfo(void)
++{
++    if (nt_threadinfo_entry != (unsigned int)-1) {
++        struct user_desc descriptor = {
++            .entry_number = nt_threadinfo_entry,
++            .read_exec_only = 1,
++            .seg_not_present = 1,
++        };
++        syscall(__NR_set_thread_area, &descriptor);
++        nt_threadinfo_entry = (unsigned int)-1;
++    }
++}
++
+ // Minimal KUSER_SHARED_DATA structure, for those applications that require it.
+ bool setup_kuser_shared_data(void)
+ {
+     SharedUserData = mmap((PVOID)(MM_SHARED_USER_DATA_VA),
+                           sizeof(KUSER_SHARED_DATA),
+                           PROT_READ | PROT_WRITE,
+-                          MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
++                          MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE,
+                           -1,
+                           0);
+ 

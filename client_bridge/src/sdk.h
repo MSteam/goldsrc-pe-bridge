@@ -1,0 +1,13 @@
+#pragma once
+#include <cstdint>
+#include "wrect.h"
+#include "cl_dll.h"
+#include "pm_defs.h"
+#include "event_api.h"
+#include "triangleapi.h"
+#include "demo_api.h"
+#include "net_api.h"
+#include "ivoicetweak.h"
+#include "cl_entity.h"
+#include "usercmd.h"
+#include "r_studioint.h"
