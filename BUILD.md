@@ -5,7 +5,7 @@ Requirements (host): `git`, `python3`, `podman`, LLVM with `clang-cl`, `lld-link
 with Gunman Chronicles installed (`rewolf`, used by the mandatory regression tests).
 
 ```bash
-git clone --recursive https://github.com/<user>/goldsrc-pe-bridge.git
+git clone --recursive https://github.com/MSteam/goldsrc-pe-bridge.git
 cd goldsrc-pe-bridge
 bash client_bridge/tools/bootstrap.sh   # fetches loadlibrary c40033b, applies pe_runtime/tools/loadlibrary.patch
 podman pull registry.gitlab.steamos.cloud/steamrt/scout/sdk@sha256:16256da93a0746b446e212e7b796d1533fe312f6122a15c36a7e6a4d7648744f
