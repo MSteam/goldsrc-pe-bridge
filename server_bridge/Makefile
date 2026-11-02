@@ -8,6 +8,9 @@ LDLIBS := -L../pe_runtime/build -lgoldsrc_pe -Wl,-rpath,'$$ORIGIN:$$ORIGIN/../..
 .PHONY: all
 all: build/bridge.so
 build/runtime.o build/bridge.o build/config.o build/elf_exports.o: ../build_settings.mk
+build:
+	mkdir -p build
+build/runtime.o build/bridge.o build/config.o build/elf_exports.o build/export_slots.o build/bridge.so build/engine_thunks.inc build/export_slots.S: | build
 .PHONY: runtime
 runtime:
 	$(MAKE) -C ../pe_runtime
