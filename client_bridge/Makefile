@@ -6,13 +6,11 @@ CXXFLAGS := $(COMMON) $(PREFIX) -std=c++17 -DLINUX -D_LINUX -Wno-endif-labels -I
 RUNTIME := ../pe_runtime/build/libgoldsrc_pe.so
 LDLIBS := -L../pe_runtime/build -lgoldsrc_pe -Wl,-rpath,'$$ORIGIN/../../pe_runtime/build:$$ORIGIN/../dlls' -lm -lpthread -lrt
 all: build/client.so build/vgui_host.dll
-# Optional tests; smoke needs an installed game and mod (scout/tools/build.sh --test).
-tests: build/smoke build/mouse_input_test
-.PHONY: all tests
+.PHONY: all
 build:
 	mkdir -p build
-build/bridge.o build/render.o build/native_viewport.o build/mouse_input.o build/smoke build/mouse_input_test build/engine_thunks.inc build/vgui_headers.stamp build/stub/vgui.so: | build
-build/bridge.o build/render.o build/native_viewport.o build/mouse_input.o build/smoke build/mouse_input_test: ../build_settings.mk
+build/bridge.o build/render.o build/native_viewport.o build/mouse_input.o build/engine_thunks.inc build/vgui_headers.stamp build/stub/vgui.so: | build
+build/bridge.o build/render.o build/native_viewport.o build/mouse_input.o: ../build_settings.mk
 .PHONY: runtime
 runtime:
 	$(MAKE) -C ../pe_runtime
@@ -36,10 +34,6 @@ build/stub/vgui.so:
 	printf '' | $(CC) $(COMMON) -shared -nostdlib -x c - -o $@
 build/client.so: build/bridge.o build/render.o build/native_viewport.o build/mouse_input.o build/stub/vgui.so $(RUNTIME)
 	$(CXX) $(COMMON) -shared $(filter %.o,$^) $(LDLIBS) -Lbuild/stub -Wl,--no-as-needed -l:vgui.so -Wl,--as-needed -Wl,-rpath,'$$ORIGIN/../..' -ldl -lGL -lSDL2 -Wl,--exclude-libs,ALL -o $@
-build/smoke: tests/smoke.cpp src/sdk.h build/engine_slot_names.inc
-	$(CXX) $(CXXFLAGS) -Ibuild $< -ldl -o $@
-build/mouse_input_test: tests/mouse_input.cpp src/mouse_input.cpp src/mouse_input.h src/native_viewport.h src/sdk.h
-	$(CXX) $(CXXFLAGS) tests/mouse_input.cpp src/mouse_input.cpp -o $@
 # DLL snapshots keep their original timestamps. Check the ABI even when a
 # newly selected DLL happens to be older than the generated headers.
 .PHONY: force-vgui-headers
@@ -52,3 +46,5 @@ build/vgui_host.obj: src/vgui_host.cpp src/vgui_host_api.h build/vgui_headers.st
 	clang-cl /nologo /c /GS- /GR- /EHs-c- /Zl /O1 /clang:-fno-builtin /I build/win_include /I build/vgui_include /I src /Fo:$@ --target=i686-pc-windows-msvc $<
 build/vgui_host.dll: build/vgui_host.obj build/vgui.lib
 	lld-link /dll /noentry /nodefaultlib /machine:x86 /base:0x20000000 /out:$@ $^
+# Optional local test rules.
+-include tests.mk

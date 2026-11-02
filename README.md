@@ -9,7 +9,6 @@ WinAPI subset these DLLs use); thin Linux libraries adapt the engine interfaces.
   `filesystem_stdio.dll`, `fmod.dll` (FMOD 3 via libmpg123 + SDL2) and `SDL2.dll`.
 - `client_bridge/` – `client.so` replacing the mod's client library.
 - `server_bridge/` – `bridge.so` server library; picks the Windows DLL from `liblist.gam`.
-- `scout/tools/` – build in the Steam Runtime "scout" SDK, tests, installation.
 
 Known to work with Gunman Chronicles, Half-Life: Reprocessing and Half-Life: Decay.
 Unsupported WinAPI calls stop with a named error (`[bridge] UNSUPPORTED WinAPI: …`)

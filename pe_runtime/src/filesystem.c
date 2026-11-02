@@ -10,8 +10,8 @@
  * destructor has one slot, overloads are grouped (Size(const char*) precedes
  * Size(FileHandle_t)). FPrintf is variadic, hence cdecl with this on the stack.
  * Itanium ABI (native): this is the first stack argument, two destructor
- * slots, declaration order. tools/check_filesystem_abi.py verifies both orders
- * against public/FileSystem.h and clang-cl's MSVC vtable layout. */
+ * slots, declaration order. Both orders follow public/FileSystem.h; the MSVC one
+ * matches clang-cl's vtable layout of that header. */
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdint.h>

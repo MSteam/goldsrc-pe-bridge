@@ -14,7 +14,7 @@ special={'pfnClientCommand':'aligned_client_command','pfnAlertMessage':'aligned_
     f'engine_pe.{name} = engine_original.{name} ? {special[name]} : nullptr;\n' if name in special else
     f'engine_pe.{name} = engine_original.{name} ? EngineThunk<decltype(enginefuncs_t::{name}), &enginefuncs_t::{name}>::call : nullptr;\n'
     for name in names))
-# Slot names for the server smoke test's named traps.
+# Slot names, for diagnostics that name an engine callback.
 (ROOT/'build/engine_slot_names.inc').write_text(
     'static const char *const engine_slot_names[]={'+','.join(f'"{n}"' for n in names)+'};\n')
 print('Aligned engine entries:',len(names))

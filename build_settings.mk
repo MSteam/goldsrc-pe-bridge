@@ -4,3 +4,6 @@
 COMMON := -m32 -march=pentium-m -mfpmath=387 -O1 -g -fPIC \
           -fno-delete-null-pointer-checks -fno-gnu-unique -fno-strict-aliasing \
           -mstackrealign -mincoming-stack-boundary=2 -fno-omit-frame-pointer
+# Scout's libc headers predate this flag; the loader needs a kernel that
+# implements it (Linux >= 4.17). Same value as newer headers define.
+COMMON += -DMAP_FIXED_NOREPLACE=0x100000

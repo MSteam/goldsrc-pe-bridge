@@ -38,7 +38,7 @@ assert len(studio_names)==46 and studio_names[40]=='IsHardware'
 (ROOT/'build/studio_thunks.inc').write_text(''.join(
     f'studio_pe.{n}=studio_native.{n}?StudioThunk<decltype(engine_studio_api_t::{n}),&engine_studio_api_t::{n}>::call:nullptr;\n'
     for n in studio_names))
-# Slot names for the smoke test's named traps.
+# Slot names, for diagnostics that name an engine callback.
 tables=[]
 for filename,tag,field in [('event_api.h','event_api_s','pEventAPI'),('triangleapi.h','triangleapi_s','pTriAPI'),
                            ('r_efx.h','efx_api_s','pEfxAPI'),('demo_api.h','demo_api_s','pDemoAPI'),('net_api.h','net_api_s','pNetAPI')]:

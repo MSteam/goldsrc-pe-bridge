@@ -187,8 +187,8 @@ EXPORT int Initialize(cl_enginefunc_t *engine,int version) {
 EXPORT const cl_enginefunc_t *ClientBridge_GetPEEngineFunctions() {return &engine_pe;}
 /* Native GameUI asks the client factory for GameClientExports001 (server name
  * and in-game voice muting). The PE object has the Microsoft C++ ABI: thiscall
- * methods after a single destructor slot (checked by
- * tools/check_client_exports_abi.py). This native object forwards to it and
+ * methods after a single destructor slot (the slots match clang-cl's MSVC
+ * vtable layout of IGameClientExports.h). This native object forwards to it and
  * answers with neutral values while no PE client is loaded. */
 enum {msvc_slot_GetServerHostName=1,msvc_slot_IsPlayerGameVoiceMuted=2,
       msvc_slot_MutePlayerGameVoice=3,msvc_slot_UnmutePlayerGameVoice=4};

@@ -1,39 +1,41 @@
 # Building
 
-Requirements: `git`, `python3`, `podman`, LLVM with `clang-cl`, `lld-link` and
-`llvm-dlltool` (for the small Windows-side helper DLL and ABI checks). No game or
-mod files are needed to build.
+The Linux libraries are built in the Steam Runtime "scout" SDK (32-bit, the
+runtime Steam runs Half-Life in). The small Windows helper `vgui_host.dll` is
+built on the host with LLVM (`clang-cl`, `lld-link`, `llvm-dlltool`).
+No game or mod files are needed.
 
 ```bash
 git clone --recursive https://github.com/MSteam/goldsrc-pe-bridge.git
 cd goldsrc-pe-bridge
-bash client_bridge/tools/bootstrap.sh   # taviso/loadlibrary c40033b + pe_runtime/tools/loadlibrary.patch
-podman pull registry.gitlab.steamos.cloud/steamrt/scout/sdk@sha256:16256da93a0746b446e212e7b796d1533fe312f6122a15c36a7e6a4d7648744f
-bash scout/tools/build.sh
+
+# PE loader: taviso/loadlibrary at the pinned revision plus the bridge patch
+git clone https://github.com/taviso/loadlibrary.git client_bridge/refs/loadlibrary
+git -C client_bridge/refs/loadlibrary checkout c40033b12fd82514f8ee4e42a25906b773b91b5c
+git -C client_bridge/refs/loadlibrary apply "$PWD/pe_runtime/tools/loadlibrary.patch"
+
+# Windows helper (host)
+make -C client_bridge build/vgui_host.dll
+
+# Linux libraries (scout SDK)
+podman run --rm --userns=keep-id -v "$PWD:$PWD" -w "$PWD" \
+  registry.gitlab.steamos.cloud/steamrt/scout/sdk@sha256:16256da93a0746b446e212e7b796d1533fe312f6122a15c36a7e6a4d7648744f \
+  sh -c 'make -C server_bridge CC=gcc-9 CXX=g++-9 && make -C client_bridge CC=gcc-9 CXX=g++-9 build/client.so'
 ```
 
-The build runs in the Steam Runtime "scout" SDK container without network.
-Output: `scout/work/src/{pe_runtime,client_bridge,server_bridge}/build/`, log: `scout/logs/build.log`.
+Result:
 
-`bash scout/tools/build.sh --test` also runs the tests (PE fixtures, no mods
-needed); with `HL_GAME_DIR=<Half-Life> CB_SMOKE_MODS="<mod> ..."` it additionally
-loads those installed mods in a mock engine.
+| File | Install to |
+|---|---|
+| `client_bridge/build/client.so` | `<mod>/cl_dlls/` |
+| `client_bridge/build/vgui_host.dll` | `<mod>/cl_dlls/` |
+| `server_bridge/build/bridge.so` | `<mod>/dlls/` |
+| `pe_runtime/build/libgoldsrc_pe.so` | `<mod>/dlls/` |
 
-## Installing into a mod
-
-```bash
-bash scout/tools/install.sh <Half-Life>/<mod> [--vgui-dll <path to vgui.dll>]
-```
-
-Copies `cl_dlls/client.so`, `cl_dlls/vgui_host.dll`, `dlls/bridge.so` and
-`dlls/libgoldsrc_pe.so` into the mod (previous files are backed up under
-`client_bridge/logs/backups/`). The client also needs Valve's Windows
-`cl_dlls/vgui.dll`; if the mod does not ship one, pass `--vgui-dll` with the
-`vgui.dll` from a Windows Half-Life installation. Then add to the mod's `liblist.gam`:
+The client also needs Valve's Windows `vgui.dll` in `<mod>/cl_dlls/` (from a
+Windows Half-Life installation) if the mod does not ship one. Then add to the
+mod's `liblist.gam` and start the game from Steam as usual:
 
 ```
 gamedll_linux "dlls/bridge.so"
 ```
-
-Run the game from Steam as usual. `HL_GAME_DIR=<Half-Life> scout/tools/run_runtime.sh <mod> [engine args]`
-starts it from a terminal in the same runtime; `CB_TEST_FRAMES=N` quits after N level frames.

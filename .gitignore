@@ -1,5 +1,5 @@
-# Whitelist: only sources are tracked. Everything else in this folder is local
-# (Valve/mod binaries, build output, logs, backups, research notes).
+# Whitelist: only the library sources and what their Makefiles need are tracked.
+# Everything else here is local (build scripts, tests, binaries, logs, notes).
 /*
 !/.gitignore
 !/.gitmodules
@@ -10,22 +10,26 @@
 !/client_bridge/
 !/server_bridge/
 !/pe_runtime/
-!/scout/
 /client_bridge/*
 !/client_bridge/Makefile
 !/client_bridge/vgui.def
 !/client_bridge/src/
-!/client_bridge/tests/
 !/client_bridge/tools/
+/client_bridge/tools/*
+!/client_bridge/tools/generate_thunks.py
+!/client_bridge/tools/prepare_vgui.py
+!/client_bridge/tools/inspect_pe.py
 /server_bridge/*
 !/server_bridge/Makefile
 !/server_bridge/src/
-!/server_bridge/tests/
 !/server_bridge/tools/
+/server_bridge/tools/*
+!/server_bridge/tools/generate_engine_thunks.py
+!/server_bridge/tools/generate_export_slots.py
 /pe_runtime/*
 !/pe_runtime/Makefile
 !/pe_runtime/src/
 !/pe_runtime/tools/
-/scout/*
-!/scout/tools/
+/pe_runtime/tools/*
+!/pe_runtime/tools/loadlibrary.patch
 __pycache__/
