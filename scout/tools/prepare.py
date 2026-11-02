@@ -60,6 +60,7 @@ def gamedll(liblist):
  return match.group(1).replace('\\','/')
 for mod in SMOKE_MODS:
  source=GAME/mod;target=WORK/'smoke'/mod
+ if not (source/'liblist.gam').exists():print(f'smoke: {mod} is not installed, skipped');continue
  server=gamedll(source/'liblist.gam')
  (target/'cl_dlls').mkdir(parents=True);(target/server).parent.mkdir(parents=True,exist_ok=True)
  (target/'liblist.gam').symlink_to(source/'liblist.gam')

@@ -12,7 +12,7 @@ podman image inspect "$image" >"$scout_dir/logs/sdk_image.json"
 python3 "$scout_dir/tools/prepare.py" >"$scout_dir/logs/prepare.log" 2>&1
 source_dir="$scout_dir/work/Half-Life/Rewolf/mod_src"
 podman run --rm --network=none --userns=keep-id \
- -v "$game_dir:$game_dir:ro" -v "$scout_dir:$scout_dir:rw" \
+ -v "$game_dir:$game_dir:ro" -v "$bridge_dir:$bridge_dir:ro" -v "$scout_dir:$scout_dir:rw" \
  -e CB_ORIGINAL_MOD="$gunman_dir" -e CB_GAME_DIR="$game_dir" "$image" \
  bash "$scout_dir/tools/build_inside.sh" "$source_dir" >"$scout_dir/logs/build.log" 2>&1
 python3 "$scout_dir/tools/audit.py" >>"$scout_dir/logs/build.log"

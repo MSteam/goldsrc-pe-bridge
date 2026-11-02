@@ -19,6 +19,8 @@ elif git -C "$loader_dir" diff --quiet && git -C "$loader_dir" apply --check "$p
 else
     echo 'Unexpected loader changes; preserve them and inspect the patch.' >&2;exit 1
 fi
+# --fetch-only: loader checkout and patch for scout/tools/build.sh, no host build.
+[[ "${1:-}" == --fetch-only ]] && exit 0
 if [[ ! -f "$bridge_dir/refs/vgui.dll" ]]; then
     echo 'Place the Windows vgui.dll (e.g. Gunman cl_dlls/vgui.dll) in refs/vgui.dll.' >&2;exit 1
 fi

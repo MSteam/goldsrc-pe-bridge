@@ -7,16 +7,15 @@ with Gunman Chronicles installed (`rewolf`, used by the mandatory regression tes
 ```bash
 git clone --recursive https://github.com/MSteam/goldsrc-pe-bridge.git
 cd goldsrc-pe-bridge
-bash client_bridge/tools/bootstrap.sh   # fetches loadlibrary c40033b, applies pe_runtime/tools/loadlibrary.patch
+bash client_bridge/tools/bootstrap.sh --fetch-only   # loadlibrary c40033b + pe_runtime/tools/loadlibrary.patch
 podman pull registry.gitlab.steamos.cloud/steamrt/scout/sdk@sha256:16256da93a0746b446e212e7b796d1533fe312f6122a15c36a7e6a4d7648744f
 export HL_GAME_DIR="$HOME/.local/share/Steam/steamapps/common/Half-Life"
 bash scout/tools/build.sh
 ```
 
-`bootstrap.sh` ends with a host build; only its first steps (loader checkout and
-patch) are needed, the release build is `scout/tools/build.sh`. It builds in the
-Scout SDK container without network, runs the Gunman tests (must pass) and smoke
-tests of the mods in `CB_SMOKE_MODS` (default `reprocessing decay`, informational).
+`scout/tools/build.sh` builds in the Scout SDK container without network, runs
+the Gunman tests (must pass) and smoke tests of the mods in `CB_SMOKE_MODS`
+(default `reprocessing decay`; informational, missing mods are skipped).
 Logs: `scout/logs/`, output: `scout/work/Half-Life/Rewolf/mod_src/*/build/`.
 
 ## Installing into a mod
